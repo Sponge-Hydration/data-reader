@@ -1,2 +1,2 @@
 # data-reader
-View data in database via Streamlitm
+View data in database via Streamlit at some point
