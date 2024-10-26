@@ -39,6 +39,13 @@ class dataGather:
         #get all data for a user
         return self.fetch_data(**kwargs)
 
+    def get_clean_data(self, **kwargs):
+        data = self.get_total_data(**kwargs)
+        for date in data:
+            if data[date]:
+                data[date].pop(0)
+        return data
+
     def get_day_data(self, **kwargs) -> dict:
         #TODO: get the day data for a user (the -1 value)
         total_data = self.get_total_data(**kwargs)
@@ -52,7 +59,8 @@ class dataGather:
 
 #response_data1 = get_data(Type='getnextserial')
 data_gatherer = dataGather(config.base_url)
-total_data = data_gatherer.get_total_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
-day_data = data_gatherer.get_day_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
+#total_data = data_gatherer.get_total_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
+#day_data = data_gatherer.get_day_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
+clean_data = data_gatherer.get_clean_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
 
-print(total_data)
+print(clean_data)

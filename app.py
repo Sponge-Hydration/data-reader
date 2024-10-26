@@ -1,19 +1,40 @@
 import streamlit as st
 import polars as pl
+import pandas as pd
+import plotly.express as px
 from retrieveData import data_gatherer
-#import config
 
-#st.write("Hello world")
+class cleanData:
+    def __init__(self, data):
+        self.data = data
 
-total_data = data_gatherer.get_total_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
-flattened_data = [(date, entry[0], entry[1]) for date, entries in total_data.items() for entry in entries if entry[0] != -1]
-df_notDays = pl.DataFrame(flattened_data, schema=["date", "ID", "value"])
+    def prepare_data(self):
+        rows = []
+        for date, readings in self.data.items():
+            for reading in readings:
+                time_in_seconds, value = reading
+                time = pd.to_timedelta(time_in_seconds, unit='s')
+                rows.append({"date": date, "time": time, "reading": value})
+        return pd.DataFrame(rows)
 
-st.write("notDays:", df_notDays)
+    def plot_data(self, df):
+        df['datetime'] = pd.to_datetime(df['date']) + df['time']
 
-#TODO: make graphs
-df_filteredDays = df_notDays.filter(pl.col("value") != -1.0)
-df_days = df_notDays.filter(pl.col("value") == -1.0)
+        fig = px.line(df, x='datetime', y='reading',
+                      title='Readings Over Time',
+                      labels={'datetime': 'Date and Time',
+                              'reading': 'Reading'},
+                      markers=True)
 
-st.write("Filtered Days:", df_filteredDays)
-st.write("Days with -1 values:", df_days)
+        return fig
+
+total_data = data_gatherer.get_clean_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
+#day_data = data_gatherer.get_day_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
+
+cleaned_data = cleanData(total_data)
+df = cleaned_data.prepare_data()
+
+st.write(df)
+
+fig = cleaned_data.plot_data(df)
+st.plotly_chart(fig)
