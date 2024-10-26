@@ -1,2 +1,2 @@
 # data-reader
-View data in database via Streamlit at some point
+Sponge data can be viewed in Streamlit by user now :) 
