@@ -25,10 +25,13 @@ class cleanData:
                       labels={'datetime': 'Date and Time',
                               'reading': 'Reading'},
                       markers=True)
-
         return fig
 
-total_data = data_gatherer.get_clean_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
+usernames = data_gatherer.get_clean_data(Type='getusers')
+selected_name = st.selectbox("Select a User", list(usernames.keys()))
+CustID = usernames[selected_name]
+
+total_data = data_gatherer.get_clean_data(Type='getconsumptionall', CustID=CustID)
 #day_data = data_gatherer.get_day_data(Type='getconsumptionall', CustID='urQJ61oRG6ZiEgVpRlQo6L5AVUi1')
 
 cleaned_data = cleanData(total_data)
