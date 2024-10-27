@@ -18,14 +18,18 @@ class cleanData:
         return pd.DataFrame(rows)
 
     def plot_data(self, df):
-        df['datetime'] = pd.to_datetime(df['date']) + df['time']
+        try:
+            df['datetime'] = pd.to_datetime(df['date']) + df['time']
 
-        fig = px.line(df, x='datetime', y='reading',
-                      title='Readings Over Time',
-                      labels={'datetime': 'Date and Time',
-                              'reading': 'Reading'},
-                      markers=True)
-        return fig
+
+            fig = px.line(df, x='datetime', y='reading',
+                          title='Readings Over Time',
+                          labels={'datetime': 'Date and Time',
+                                  'reading': 'Reading'},
+                          markers=True)
+            return fig
+        except:
+            return st.write(f'No data for user')
 
 usernames = data_gatherer.get_clean_data(Type='getusers')
 selected_name = st.selectbox("Select a User", list(usernames.keys()))
@@ -40,4 +44,6 @@ df = cleaned_data.prepare_data()
 st.write(df)
 
 fig = cleaned_data.plot_data(df)
-st.plotly_chart(fig)
+try:
+    st.plotly_chart(fig)
+except: st.write(f'No data to display')
