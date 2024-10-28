@@ -36,7 +36,7 @@ class dataGather:
                 cleaned_data[date] = [(self.convert_to_number(entry[0]),self.convert_to_number(entry[1])) for entry in filtered_entries]
             return cleaned_data, negative_one_data
         else:
-            print('Data does not have date keys -> returning raw data...')
+            #print('Data does not have date keys -> returning raw data...')
             return data, {}
 
     def has_date_keys(self, data) ->bool:

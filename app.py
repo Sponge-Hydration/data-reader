@@ -31,7 +31,7 @@ class cleanData:
                           markers=True)
             return fig
         except Exception as e:
-            st.write(f'Error plotting total data: {e}')
+            st.warning("There is no data for this user")
             return go.Figure()  #return empty figure if error
 
     def plot_day_data(self, negative_one_df: pd.DataFrame) -> go.Figure:
@@ -89,7 +89,7 @@ class DataApp:
             st.dataframe(negative_one_df)
 
             if negative_one_df.empty:
-                st.warning("No -1 readings available for the selected day.")
+                st.warning("There is no data for this user")
                 return
 
             fig = cleaned_data.plot_day_data(negative_one_df)
