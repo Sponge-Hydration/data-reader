@@ -26,11 +26,21 @@ class cleanData:
 
     def plot_total_data(self, df: pd.DataFrame) -> go.Figure:
         try:
-            fig = px.line(df, x='datetime', y='reading',
-                          title='Total Readings Over Time',
-                          labels={'datetime': 'Date and Time',
-                                  'reading': 'Reading'},
-                          markers=True)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=df['datetime'],
+                y=df['reading'],
+                mode='markers',
+                name='Total Readings',
+                marker=dict(size=6)
+            ))
+
+            fig.update_layout(
+                title='Total Readings Over Time (Scatter Plot)',
+                xaxis_title='Date and Time',
+                yaxis_title='Reading',
+                hovermode='closest'
+            )
             return fig
         except Exception as e:
             st.warning("There is no data for this user")
@@ -114,7 +124,10 @@ class DataApp:
         start_date, end_date = None, None
 
         if filter_by_date:  # If the box is checked
-            start_date, end_date = self.get_user_dates(CustID)
+            try:
+                start_date, end_date = self.get_user_dates(CustID)
+            except:
+                st.warning("There is no data for this user.")
             start_date = st.date_input("Start Date", value=pd.to_datetime(start_date))
             end_date = st.date_input("End Date", value=pd.to_datetime(end_date))
 
