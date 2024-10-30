@@ -1,3 +1,5 @@
+from turtledemo.penrose import start
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -15,15 +17,15 @@ class cleanData:
             for reading in readings:
                 if len(reading) == 2:
                     time_in_seconds, value = reading
-                    time = pd.to_timedelta(float(time_in_seconds), unit='s')
-                    rows.append({"date": date, "time": time, "reading": float(value)})  # Convert value to float
+                    time_in_seconds = float(time_in_seconds)  # Ensure it's a float
+                    timestamp = pd.to_datetime(date) + pd.to_timedelta(time_in_seconds, unit='s')
+                    rows.append({"datetime": timestamp, "reading": float(value)})
                 else:
                     print(f'Skipping invalid reading format {reading}')
         return pd.DataFrame(rows)
 
-    def plot_total_data(self, df):
+    def plot_total_data(self, df: pd.DataFrame) -> go.Figure:
         try:
-            df['datetime'] = pd.to_datetime(df['date']) + df['time']
             fig = px.line(df, x='datetime', y='reading',
                           title='Total Readings Over Time',
                           labels={'datetime': 'Date and Time',
@@ -32,11 +34,11 @@ class cleanData:
             return fig
         except Exception as e:
             st.warning("There is no data for this user")
-            return go.Figure()  #return empty figure if error
+            return go.Figure()
 
     def plot_day_data(self, negative_one_df: pd.DataFrame) -> go.Figure:
         if negative_one_df.empty:
-            return go.Figure()  #return an empty figure if no data
+            return go.Figure()
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(
@@ -77,7 +79,11 @@ class DataApp:
         cleaned_data, negative_one_data = self.data_gatherer.get_day_data(Type='getconsumptionall', CustID=CustID)
         return cleaned_data, negative_one_data
 
-    def prepare_and_plot_data(self, data: dict, negative_one_data: dict, data_type: str, CustID: str):
+    def get_user_dates(self, CustID: str) -> tuple:
+        dates = self.data_gatherer.get_dates(Type='getdates', CustID=CustID)
+        return dates[0], dates[-1]
+
+    def prepare_and_plot_data(self, data: dict, negative_one_data: dict, data_type: str):
         cleaned_data = cleanData(data)
         df = cleaned_data.prepare_data()
 
@@ -94,10 +100,7 @@ class DataApp:
 
             fig = cleaned_data.plot_day_data(negative_one_df)
 
-            if isinstance(fig, go.Figure):
-                st.plotly_chart(fig)
-            else:
-                st.error("Error: The figure could not be created.")
+            st.plotly_chart(fig)
 
         elif data_type == "Total Data":
             st.dataframe(df)
@@ -106,13 +109,31 @@ class DataApp:
 
     def select_and_plot_data(self, CustID: str):
         data_type = st.selectbox("Select Data Type", ["Total Data", "Day Data"])
+        filter_by_date = st.checkbox("Filter by date")
 
-        if data_type == "Total Data":
-            total_data = self.get_total_data(CustID)
-            self.prepare_and_plot_data(total_data, {}, data_type="Total Data", CustID=CustID)
-        elif data_type == "Day Data":
-            day_data, negative_one_data = self.get_day_data(CustID)  # Fetch both datasets
-            self.prepare_and_plot_data(day_data, negative_one_data, data_type="Day Data", CustID=CustID)
+        start_date, end_date = None, None
+
+        if filter_by_date:  # If the box is checked
+            start_date, end_date = self.get_user_dates(CustID)
+            start_date = st.date_input("Start Date", value=pd.to_datetime(start_date))
+            end_date = st.date_input("End Date", value=pd.to_datetime(end_date))
+
+            # Fetch filtered data based on selected dates
+            filtered_data, negative_one_data = self.data_gatherer.get_filtered_date_data(CustID, start_date, end_date)
+
+            if not filtered_data:
+                st.warning("No valid data found for the selected date range.")
+                return
+
+            self.prepare_and_plot_data(filtered_data, negative_one_data, data_type)
+
+        else:
+            if data_type == "Total Data":
+                total_data = self.get_total_data(CustID)
+                self.prepare_and_plot_data(total_data, {}, data_type)
+            elif data_type == "Day Data":
+                day_data, negative_one_data = self.get_day_data(CustID)
+                self.prepare_and_plot_data(day_data, negative_one_data, data_type)
 
     def run(self):
         CustID = self.select_user()
