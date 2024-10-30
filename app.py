@@ -128,8 +128,8 @@ class DataApp:
                 start_date, end_date = self.get_user_dates(CustID)
             except:
                 st.warning("There is no data for this user.")
-            start_date = st.date_input("Start Date", value=pd.to_datetime(start_date))
-            end_date = st.date_input("End Date", value=pd.to_datetime(end_date))
+            start_date = st.date_input(f"Start Date (first reading: {start_date})", value=pd.to_datetime(start_date))
+            end_date = st.date_input(f"End Date (most recent reading: {end_date})", value=pd.to_datetime(end_date))
 
             # Fetch filtered data based on selected dates
             filtered_data, negative_one_data = self.data_gatherer.get_filtered_date_data(CustID, start_date, end_date)
